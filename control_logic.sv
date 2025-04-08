@@ -1,21 +1,20 @@
 module ddr_sdram_controller (
-    input  logic clk,          // System clock
-	input  logic clkn,         // System clock
-    input  logic rst_n,        // Active-low reset
-    input  logic cke,          // Clock enable
-    input  logic cs,           // Chip select (active high)
-    input  logic ras,          // Row address strobe (active high)
-    input  logic cas,          // Column address strobe (active high)
-    input  logic we,           // Write enable (active high)
-    input  logic [15:0] addr,  // Address bus (expanded to 16 bits for address_decoder)
-    inout  logic [15:0] dq,    // Data bus
-    inout  logic dqs,          // Data strobe
-    input  logic dm,           // Data mask
-    output logic [15:0] data_out, // Output data
-    output logic init_done     // Controller ready signal
+    input  logic clk,          
+	input  logic clkn,         
+    input  logic rst_n,        
+    input  logic cke,          
+    input  logic cs,           
+    input  logic ras,          
+    input  logic cas,          
+    input  logic we,           
+    input  logic [15:0] addr,  
+    inout  logic [15:0] dq,    
+    inout  logic dqs,          
+    input  logic dm,           
+    output logic [15:0] data_out, 
+    output logic init_done     
 );
-
-// Timing Parameters dont know what these values should be
+// Timing Parameters (Not Finalized)
 parameter tRCD = 10; //Row to Column Delay
 parameter tRP = 10;  //Row Precharge Time
 parameter tRAS = 10; //Row Active Time
@@ -23,14 +22,15 @@ parameter tRC = 10;  //Row Cycle Time
 parameter tRFC = 10; //Refresh Cycle Time
 parameter tWR = 10;  //Write Recovery Time
 parameter tWTR = 10; //Write to Read Delay
-parameter tRRD = 10; //Row to Row Delay (different bank transaction not implemented
+parameter tRRD = 10; //Row to Row Delay
 parameter tDAL = 10; //Data-in to Auto Precharge Delay
 parameter tDQSS = 10;//DQS Latching Transition
 parameter tMRD = 10; // Mode Register Set Delay
-// Address Parameters
+parameter tDSGN = 32'h41594148;
 parameter INIT_WAIT_CYCLES = 20000; // For 200µs at 100MHz
-parameter CAPACITY = 4;
+parameter CAPACITY = 4; // Address Parameters
 parameter DATA_WIDTH = 2;
+
 localparam ROW_WIDTH = (CAPACITY == 1) ? 12 : (CAPACITY == 2 || CAPACITY == 3) ? 13 : 14;
 localparam COL_WIDTH = (CAPACITY == 1 || CAPACITY == 2) ? (DATA_WIDTH == 1) ? 11 :
 															 (DATA_WIDTH == 2) ? 10 :
@@ -39,44 +39,42 @@ localparam COL_WIDTH = (CAPACITY == 1 || CAPACITY == 2) ? (DATA_WIDTH == 1) ? 11
 															 (DATA_WIDTH == 2) ? 11 :
 															 10;
 //Timings signals
-logic [7:0] tRCD_counter;  // Row to Column Delay counter
-logic [7:0] tRP_counter;   // Row Precharge Time counter
-logic [7:0] tRFC_counter;  // Refresh Cycle Time counter
-logic [7:0] tMRD_counter;  // Mode Register Set Delay counter
-logic [7:0] tRAS_counter;  // Row Active Time counter
-logic [7:0] tRC_counter;   // Row Cycle Time counter  
-logic [7:0] tRRD_counter;  //Row to Row Delay counter
-logic [7:0] tWR_counter;   // Write Recovery Time counter
-logic [7:0] tWTR_counter;  // Write to Read Delay counter
-logic [7:0] tDAL_counter;  // Data-in to Auto Precharge Delay counter
+logic [7:0] tRCD_counter;  
+logic [7:0] tRP_counter;   
+logic [7:0] tRFC_counter;  
+logic [7:0] tMRD_counter;  
+logic [7:0] tRAS_counter;  
+logic [7:0] tRC_counter;   
+logic [7:0] tRRD_counter;  
+logic [7:0] tWR_counter;   
+logic [7:0] tWTR_counter;  
+logic [7:0] tDAL_counter;  
 logic [2:0] burst_counter;
-
 logic [15:0] init_counter, init_precharge_done, init_mrs_done, init_refresh_count; // Initialization signals
-logic [ROW_WIDTH-1:0] row_addr; // Row address register
+logic [ROW_WIDTH-1:0] row_addr; // Address Signals
 logic [1:0] p_ba;				// Previous selected Bank
 logic [1:0] c_ba;				// Current selected Bank
-logic [COL_WIDTH-1:0] col_addr; // Column address register
-logic [2:0] burst_length;     // Burst length (2, 4, or 8)
-logic burst_type;			  // Burst type (0, or 1)
-logic [2:0] cas_latency;      // CAS latency (2, 2.5, or 3)
-logic [6:0]operating_mode;	  // Operating mode
-logic ap;         // Auto precharge flag
+logic [COL_WIDTH-1:0] col_addr; 
+logic [2:0] burst_length;     
+logic burst_type;			  
+logic [2:0] cas_latency;      
+logic [6:0]operating_mode;	  
+logic ap;					  
 logic [15:0] data_in;         // Input data buffer
 logic [15:0] data_out_reg;    // Output data buffer
-logic dqs_en;                 // DQS enable signal
-logic dq_en;                  // DQ enable signal
+logic dqs_en;                 
+logic dq_en;                  
 logic cke_ps, cke_cs;         // cke previous/current state
 
-// Address decoder signals (renamed with d_ prefix)
+// Address decoder signals
 logic [1:0] d_ba;             // Decoded bank address
-logic [2:0] d_burst_len;      // Decoded burst length
-logic d_burst_type;           // Decoded burst type
+logic [2:0] d_burst_len;      
+logic d_burst_type;           
 logic [2:0] d_cl;             // Decoded CAS latency
-logic [6:0] d_operating_mode; // Decoded operating mode
-logic [ROW_WIDTH-1:0] d_row_add;       // Decoded row address
-logic [COL_WIDTH-1:0] d_col_add;       // Decoded column address
+logic [6:0] d_operating_mode; 
+logic [ROW_WIDTH-1:0] d_row_add;       
+logic [COL_WIDTH-1:0] d_col_add;       
 logic d_ap;                   // Decoded auto precharge flag
-
 // adf signal to map state_t to address_decoder function codes
 logic [3:0] adf;
 
@@ -118,14 +116,14 @@ address_decoder #(
 ) addr_decoder_inst (
     .address(addr),
     .adf(adf),               // Use the mapped adf signal
-    .BA(d_ba),               // Decoded bank address
-    .burst_len(d_burst_len), // Decoded burst length
-    .burst_type(d_burst_type), // Decoded burst type
-    .CL(d_cl),               // Decoded CAS latency
-    .operating_mode(d_operating_mode), // Decoded operating mode
-    .row_add(d_row_add),     // Decoded row address
-    .col_add(d_col_add),     // Decoded column address
-    .ap(d_ap)                // Decoded auto precharge flag
+    .BA(d_ba),               
+    .burst_len(d_burst_len), 
+    .burst_type(d_burst_type), 
+    .CL(d_cl),               
+    .operating_mode(d_operating_mode), 
+    .row_add(d_row_add),     
+    .col_add(d_col_add),     
+    .ap(d_ap)                
 );
 
 //FSM
