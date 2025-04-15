@@ -19,7 +19,7 @@ This project implements a functional RTL model of a DDR1 SDRAM controller based 
 |-------------|-------------|
 | `rtl/control_logic.sv` | Command FSM, bank tracking, and timing enforcement |
 | `rtl/address_decoder.sv` | Address slicing for bank/row/col + MRS field extraction |
-| `tb/ddr1_top_tb.sv` | (Optional) Top-level testbench with basic DDR1 sequence testing |
+| `tb/ddr1_top_tb.sv` | (Planned) Top-level testbench with basic DDR1 sequence testing |
 
 ## ✅ Status
 
