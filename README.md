@@ -11,6 +11,7 @@ This project implements a functional RTL model of a DDR1 SDRAM controller based 
 - Self-refresh and power-down support via CKE control
 - Mode Register decode (burst length, CAS latency, burst type)
 - Modular FSM-based control path
+- Modular support to be driven by DDR Controller
 - Forward-compatible design for datapath integration (burst handling)
 
 ## 📂 File Structure
@@ -18,8 +19,8 @@ This project implements a functional RTL model of a DDR1 SDRAM controller based 
 | File/Folder | Description |
 |-------------|-------------|
 | `rtl/control_logic.sv` | Command FSM, bank tracking, and timing enforcement |
-| `rtl/address_decoder.sv` | Address slicing for bank/row/col + MRS field extraction |
-| `tb/ddr1_top_tb.sv` | (Planned) Top-level testbench with basic DDR1 sequence testing |
+| `rtl/memory_array.sv` | Memory model and burst address generation |
+| `DDR1-SDRAM-Controller-Functional-Design/tb/` | Top-level testbench combined with DDR controller (repository) testbench |
 
 ## ✅ Status
 
