@@ -25,8 +25,8 @@ This project implements a functional RTL model of a DDR1 SDRAM controller based 
 
 - Control logic: ✔️ Complete  
 - Address decode: ✔️ Complete  
-- Datapath (burst/data handling): 🔄 Planned  
-- Memory array abstraction: 🔄 Planned  
+- Datapath (burst/data handling): ✔️ Complete  
+- Memory array abstraction: ✔️ Complete  
 
 ## 🚀 Author
 
