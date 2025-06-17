@@ -97,7 +97,7 @@ assign burst_stop = (current_state == BURST_STOP) ? 1 : 0;
 //FSM
 always_comb begin
 	//Address decode
-	if (current_state == ACTIVE || current_state == PRECHARGE) begin
+	if (current_state != READ_WITH_AUTOPRECHARGE && current_state != WRITE_WITH_AUTOPRECHARGE) begin
 		c_ba = ba;
 		if (current_state == ACTIVE && !((!cs_n && ras_n && !cas_n && we_n) || (!cs_n && ras_n && !cas_n && !we_n))) begin
 			d_row_add = addr [ROW_WIDTH-1:0];
@@ -107,7 +107,7 @@ always_comb begin
 	if (current_state == READ || current_state == READ_WITH_AUTOPRECHARGE || current_state == WRITE || current_state == WRITE_WITH_AUTOPRECHARGE) begin
 		d_col_add [9:0] = addr [COL_WIDTH-1:0];
 	end
-
+	cke_cs = cke;
     case (current_state)	//FSM start
         IDLE: begin
             if (!cs_n && !ras_n && !cas_n && !we_n) begin
@@ -304,7 +304,6 @@ end
 always_ff @(posedge clk) begin
 	previous_state <= current_state; // Update previous_state
 	cke_ps <= cke_cs;
-	cke_cs <= cke;
 	current_state <= next_state;
 	p_ba <= c_ba;
 	bank_states[c_ba] <= bank_next_state;
